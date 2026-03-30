@@ -1,0 +1,20 @@
+{
+  "name": "movie-search-engine",
+  "version": "1.0.0",
+  "description": "Full-stack Movie Search Engine with React frontend and Node.js/Express backend",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run preview"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["movie", "search", "react", "nodejs", "express", "mongodb"],
+  "author": "",
+  "license": "MIT"
+}
