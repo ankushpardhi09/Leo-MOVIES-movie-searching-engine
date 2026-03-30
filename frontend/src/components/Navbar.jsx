@@ -28,11 +28,23 @@ const Navbar = () => {
             >
               Home
             </Link>
+            <Link
+              to="/watchlist"
+              className="text-gray-300 hover:text-white transition-colors font-medium"
+            >
+              Watchlist
+            </Link>
             <button
               onClick={() => navigate('/')}
               className="btn-primary text-sm"
             >
               Search Movies
+            </button>
+            <button
+              onClick={() => navigate('/signin')}
+              className="btn-secondary text-sm"
+            >
+              Sign In
             </button>
           </div>
 
@@ -62,6 +74,22 @@ const Navbar = () => {
             >
               Home
             </Link>
+            <Link
+              to="/watchlist"
+              className="block px-2 py-2 text-gray-300 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              Watchlist
+            </Link>
+            <button
+              onClick={() => {
+                navigate('/signin');
+                setMenuOpen(false);
+              }}
+              className="mt-2 w-full text-left px-2 py-2 text-gray-300 hover:text-white"
+            >
+              Sign In
+            </button>
           </div>
         )}
       </div>

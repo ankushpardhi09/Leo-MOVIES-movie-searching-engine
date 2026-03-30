@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import MoviePage from './pages/MoviePage';
+import WatchlistPage from './pages/WatchlistPage';
+import SignInPage from './pages/SignInPage';
 import './App.css';
 
 function App() {
@@ -13,6 +15,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/movie/:id" element={<MoviePage />} />
+            <Route path="/watchlist" element={<WatchlistPage />} />
+            <Route path="/signin" element={<SignInPage />} />
           </Routes>
         </main>
         <footer className="text-center py-6 text-gray-600 text-sm border-t border-dark-700 mt-12">

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getSuggestions } from '../api/api';
 
 const SearchBar = ({ onSearch, initialQuery = '' }) => {
@@ -8,31 +7,54 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef(null);
-  const inputRef = useRef(null);
-  const navigate = useNavigate();
+  const containerRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
   useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (query.trim().length < 2) {
+    const normalizedQuery = query.trim();
+
+    if (normalizedQuery.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setLoading(false);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
       setLoading(true);
+
       try {
-        const data = await getSuggestions(query);
-        setSuggestions(data.suggestions || []);
-        setShowSuggestions(true);
+        const data = await getSuggestions(normalizedQuery);
+        if (requestId !== requestIdRef.current) return;
+
+        const nextSuggestions = (data.suggestions || []).slice(0, 6);
+        setSuggestions(nextSuggestions);
+        setShowSuggestions(nextSuggestions.length > 0);
       } catch {
+        if (requestId !== requestIdRef.current) return;
         setSuggestions([]);
+        setShowSuggestions(false);
       } finally {
+        if (requestId !== requestIdRef.current) return;
         setLoading(false);
       }
     }, 400);
@@ -44,27 +66,34 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
     e.preventDefault();
     if (query.trim()) {
       setShowSuggestions(false);
+      setSuggestions([]);
       onSearch(query.trim());
     }
   };
 
   const handleSuggestionClick = (movie) => {
+    if (!movie?.Title) return;
+
     setShowSuggestions(false);
+    setSuggestions([]);
     setQuery(movie.Title);
-    navigate(`/movie/${movie.imdbID}`);
+    onSearch(movie.Title);
   };
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
+    <div ref={containerRef} className="relative w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
           <input
-            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowSuggestions(false);
+              }
+            }}
             placeholder="Search for movies..."
             className="input-field w-full pr-10 text-base"
             aria-label="Search movies"
@@ -89,7 +118,8 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
           {suggestions.map((movie) => (
             <button
               key={movie.imdbID}
-              onMouseDown={() => handleSuggestionClick(movie)}
+              type="button"
+              onClick={() => handleSuggestionClick(movie)}
               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-600 transition-colors text-left"
             >
               {movie.Poster && movie.Poster !== 'N/A' ? (
