@@ -2,6 +2,29 @@ const axios = require('axios');
 
 const OMDB_BASE_URL = 'http://www.omdbapi.com/';
 
+const getOmdbApiKey = () => {
+  const raw = (process.env.OMDB_API_KEY || '').trim();
+  if (!raw) {
+    throw new Error('OMDB API key is not configured');
+  }
+
+  // Accept either a plain API key or a pasted verification URL containing apikey/VERIFYKEY.
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    try {
+      const parsedUrl = new URL(raw);
+      return (
+        parsedUrl.searchParams.get('apikey') ||
+        parsedUrl.searchParams.get('VERIFYKEY') ||
+        raw
+      );
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  return raw;
+};
+
 /**
  * Search movies by title using OMDB API
  * @param {string} query - Search query
@@ -9,10 +32,7 @@ const OMDB_BASE_URL = 'http://www.omdbapi.com/';
  * @returns {Object} - OMDB search results
  */
 const searchMovies = async (query, page = 1) => {
-  const apiKey = process.env.OMDB_API_KEY;
-  if (!apiKey) {
-    throw new Error('OMDB API key is not configured');
-  }
+  const apiKey = getOmdbApiKey();
 
   const response = await axios.get(OMDB_BASE_URL, {
     params: {
@@ -33,10 +53,7 @@ const searchMovies = async (query, page = 1) => {
  * @returns {Object} - Full movie details
  */
 const getMovieById = async (imdbID) => {
-  const apiKey = process.env.OMDB_API_KEY;
-  if (!apiKey) {
-    throw new Error('OMDB API key is not configured');
-  }
+  const apiKey = getOmdbApiKey();
 
   const response = await axios.get(OMDB_BASE_URL, {
     params: {
@@ -56,10 +73,7 @@ const getMovieById = async (imdbID) => {
  * @returns {Object} - Movie details
  */
 const getMovieByTitle = async (title) => {
-  const apiKey = process.env.OMDB_API_KEY;
-  if (!apiKey) {
-    throw new Error('OMDB API key is not configured');
-  }
+  const apiKey = getOmdbApiKey();
 
   const response = await axios.get(OMDB_BASE_URL, {
     params: {

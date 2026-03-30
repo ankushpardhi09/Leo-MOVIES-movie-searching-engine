@@ -1,20 +1,20 @@
 {
   "name": "movie-search-engine",
   "version": "1.0.0",
-  "description": "Full-stack Movie Search Engine with React frontend and Node.js/Express backend",
+  "description": "Movie Search Engine - Full Stack",
+  "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd backend && npm start",
-    "start:frontend": "cd frontend && npm run preview"
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:separate": "start-separate.bat",
+    "dev:windows:separate": "start-separate.bat",
+    "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix frontend\"",
+    "backend": "npm run dev --prefix backend",
+    "frontend": "npm run dev --prefix frontend",
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "keywords": ["movie", "search", "react", "nodejs", "express", "mongodb"],
-  "author": "",
-  "license": "MIT"
+    "concurrently": "^8.2.0"
+  }
 }
