@@ -1,5 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Film } from 'lucide-react';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,9 +15,11 @@ const Navbar = () => {
             to="/"
             className="flex items-center gap-2 text-white font-bold text-xl hover:text-accent-primary transition-colors"
           >
-            <span className="text-2xl">🎬</span>
+            <span className="text-2xl">
+              <Film />
+            </span>
             <span className="hidden sm:block">
-              Movie<span className="text-accent-primary">Search</span>
+              Leo<span className="text-accent-primary"> MOVIES</span>
             </span>
           </Link>
 
@@ -35,13 +38,13 @@ const Navbar = () => {
               Watchlist
             </Link>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="btn-primary text-sm"
             >
               Search Movies
             </button>
             <button
-              onClick={() => navigate('/signin')}
+              onClick={() => navigate("/signin")}
               className="btn-secondary text-sm"
             >
               Sign In
@@ -54,11 +57,26 @@ const Navbar = () => {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               )}
             </svg>
           </button>
@@ -83,7 +101,7 @@ const Navbar = () => {
             </Link>
             <button
               onClick={() => {
-                navigate('/signin');
+                navigate("/signin");
                 setMenuOpen(false);
               }}
               className="mt-2 w-full text-left px-2 py-2 text-gray-300 hover:text-white"

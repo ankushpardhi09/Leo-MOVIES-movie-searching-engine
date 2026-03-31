@@ -19,9 +19,6 @@ function App() {
             <Route path="/signin" element={<SignInPage />} />
           </Routes>
         </main>
-        <footer className="text-center py-6 text-gray-600 text-sm border-t border-dark-700 mt-12">
-          <p>🎬 Movie Search Engine &mdash; Powered by OMDB API</p>
-        </footer>
       </div>
     </Router>
   );
