@@ -1,6 +1,9 @@
 const axios = require('axios');
 
-const OMDB_BASE_URL = 'http://www.omdbapi.com/';
+const OMDB_BASE_URL = 'https://www.omdbapi.com/';
+const REQUEST_TIMEOUT_MS = 20000;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const responseCache = new Map();
 
 const getOmdbApiKey = () => {
   const raw = (process.env.OMDB_API_KEY || '').trim();
@@ -25,6 +28,49 @@ const getOmdbApiKey = () => {
   return raw;
 };
 
+const getCacheKey = (scope, params) => `${scope}:${JSON.stringify(params)}`;
+
+const getCachedResponse = (key) => {
+  const cached = responseCache.get(key);
+  if (!cached) return null;
+
+  if (cached.expiresAt <= Date.now()) {
+    responseCache.delete(key);
+    return null;
+  }
+
+  return cached.value;
+};
+
+const setCachedResponse = (key, value) => {
+  responseCache.set(key, {
+    value,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+};
+
+const fetchOmdb = async (scope, params) => {
+  const cacheKey = getCacheKey(scope, params);
+  const cached = getCachedResponse(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const apiKey = getOmdbApiKey();
+
+  const response = await axios.get(OMDB_BASE_URL, {
+    params: {
+      apikey: apiKey,
+      ...params,
+    },
+    timeout: REQUEST_TIMEOUT_MS,
+  });
+
+  setCachedResponse(cacheKey, response.data);
+  return response.data;
+};
+
 /**
  * Search movies by title using OMDB API
  * @param {string} query - Search query
@@ -32,19 +78,11 @@ const getOmdbApiKey = () => {
  * @returns {Object} - OMDB search results
  */
 const searchMovies = async (query, page = 1) => {
-  const apiKey = getOmdbApiKey();
-
-  const response = await axios.get(OMDB_BASE_URL, {
-    params: {
-      apikey: apiKey,
-      s: query,
-      type: 'movie',
-      page,
-    },
-    timeout: 10000,
+  return fetchOmdb('search', {
+    s: query,
+    type: 'movie',
+    page,
   });
-
-  return response.data;
 };
 
 /**
@@ -53,18 +91,10 @@ const searchMovies = async (query, page = 1) => {
  * @returns {Object} - Full movie details
  */
 const getMovieById = async (imdbID) => {
-  const apiKey = getOmdbApiKey();
-
-  const response = await axios.get(OMDB_BASE_URL, {
-    params: {
-      apikey: apiKey,
-      i: imdbID,
-      plot: 'full',
-    },
-    timeout: 10000,
+  return fetchOmdb('movie', {
+    i: imdbID,
+    plot: 'full',
   });
-
-  return response.data;
 };
 
 /**
@@ -73,18 +103,10 @@ const getMovieById = async (imdbID) => {
  * @returns {Object} - Movie details
  */
 const getMovieByTitle = async (title) => {
-  const apiKey = getOmdbApiKey();
-
-  const response = await axios.get(OMDB_BASE_URL, {
-    params: {
-      apikey: apiKey,
-      t: title,
-      plot: 'short',
-    },
-    timeout: 10000,
+  return fetchOmdb('title', {
+    t: title,
+    plot: 'short',
   });
-
-  return response.data;
 };
 
 module.exports = { searchMovies, getMovieById, getMovieByTitle };
