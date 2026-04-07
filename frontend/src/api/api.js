@@ -104,4 +104,56 @@ export const getYears = async () => {
   }
 };
 
+// Authentication APIs
+export const signup = async (name, email, password, confirmPassword) => {
+  try {
+    const response = await apiClient.post('/auth/signup', {
+      name,
+      email,
+      password,
+      confirmPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Signup error:', error.message);
+    throw error.response?.data || { success: false, message: error.message };
+  }
+};
+
+export const signin = async (email, password) => {
+  try {
+    const response = await apiClient.post('/auth/signin', {
+      email,
+      password,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Signin error:', error.message);
+    throw error.response?.data || { success: false, message: error.message };
+  }
+};
+
+export const getMe = async (token) => {
+  try {
+    const response = await apiClient.get('/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Get user error:', error.message);
+    throw error.response?.data || { success: false, message: error.message };
+  }
+};
+
+// Set authorization header with token
+export const setAuthToken = (token) => {
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+  }
+};
+
 export default apiClient;

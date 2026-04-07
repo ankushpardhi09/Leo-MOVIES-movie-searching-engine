@@ -1,3 +1,12 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { BookmarkCheck, BookmarkPlus } from 'lucide-react';
+import {
+  addMovieToWatchlist,
+  isMovieInWatchlist,
+  removeMovieFromWatchlist,
+} from '../utils/watchlist';
+
 const POSTER_PLACEHOLDER = 'https://via.placeholder.com/400x600/1a1a24/666666?text=No+Image';
 
 const RatingBar = ({ source, value }) => {
@@ -27,6 +36,12 @@ const RatingBar = ({ source, value }) => {
 };
 
 const MovieDetails = ({ movie }) => {
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    setIsSaved(movie?.imdbID ? isMovieInWatchlist(movie.imdbID) : false);
+  }, [movie]);
+
   if (!movie) return null;
 
   const {
@@ -37,6 +52,21 @@ const MovieDetails = ({ movie }) => {
 
   const posterSrc = Poster && Poster !== 'N/A' ? Poster : POSTER_PLACEHOLDER;
   const genres = Genre ? Genre.split(', ') : [];
+
+  const handleWatchlistClick = () => {
+    if (!movie?.imdbID) {
+      return;
+    }
+
+    if (isSaved) {
+      removeMovieFromWatchlist(movie.imdbID);
+      setIsSaved(false);
+      return;
+    }
+
+    addMovieToWatchlist(movie);
+    setIsSaved(true);
+  };
 
   return (
     <div className="animate-slide-up">
@@ -102,6 +132,28 @@ const MovieDetails = ({ movie }) => {
                   )}
                 </div>
               )}
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleWatchlistClick}
+                  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                    isSaved
+                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20'
+                      : 'bg-accent-primary text-white hover:bg-accent-primary/90'
+                  }`}
+                >
+                  {isSaved ? <BookmarkCheck className="w-4 h-4" /> : <BookmarkPlus className="w-4 h-4" />}
+                  {isSaved ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                </button>
+
+                <Link
+                  to="/watchlist"
+                  className="inline-flex items-center gap-2 rounded-lg border border-dark-500 bg-dark-700 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-dark-600 hover:text-white"
+                >
+                  View Watchlist
+                </Link>
+              </div>
 
               {/* Plot */}
               {Plot && Plot !== 'N/A' && (

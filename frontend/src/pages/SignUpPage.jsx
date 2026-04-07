@@ -1,25 +1,34 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { signin } from '../api/api';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { signup } from '../api/api';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
-const SignInPage = () => {
+const SignUpPage = () => {
   const navigate = useNavigate();
-  const { signin: contextSignin } = useAuth();
+  const { signup: contextSignup } = useAuth();
   
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
   
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = () => {
     const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
     
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
@@ -29,6 +38,14 @@ const SignInPage = () => {
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
     
     setErrors(newErrors);
@@ -59,18 +76,23 @@ const SignInPage = () => {
 
     setLoading(true);
     try {
-      const response = await signin(formData.email, formData.password);
+      const response = await signup(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.confirmPassword
+      );
 
       if (response.success) {
-        contextSignin(response.user, response.token);
-        if (rememberMe) {
-          localStorage.setItem('rememberEmail', formData.email);
-        }
-        navigate('/');
+        contextSignup(response.user, response.token);
+        setSuccessMessage('Account created successfully! Redirecting...');
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
       }
     } catch (error) {
       setErrors({
-        submit: error.message || 'Invalid email or password',
+        submit: error.message || 'Failed to create account',
       });
     } finally {
       setLoading(false);
@@ -81,10 +103,16 @@ const SignInPage = () => {
     <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4 py-10 animate-fade-in">
       <div className="w-full max-w-md">
         <div className="bg-dark-800 border border-dark-600 rounded-xl p-6 sm:p-8 shadow-2xl">
-          <h1 className="text-3xl font-bold text-white mb-2">Sign In</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-gray-400 text-sm mb-8">
-            Access your watchlist and personalized movie picks.
+            Join to save your favorite movies and manage your watchlist.
           </p>
+
+          {successMessage && (
+            <div className="mb-6 p-3 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg">
+              <p className="text-green-400 text-sm">{successMessage}</p>
+            </div>
+          )}
 
           {errors.submit && (
             <div className="mb-6 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg">
@@ -93,6 +121,28 @@ const SignInPage = () => {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm text-gray-300 mb-2">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+                <input
+                  id="name"
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter your full name"
+                  className={`input-field w-full pl-10 ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-red-400 text-xs mt-1">{errors.name}</p>
+              )}
+            </div>
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm text-gray-300 mb-2">
@@ -128,7 +178,7 @@ const SignInPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your password"
+                  placeholder="At least 6 characters"
                   className={`input-field w-full pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
                 <button
@@ -148,18 +198,37 @@ const SignInPage = () => {
               )}
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 bg-dark-700 border border-dark-600 rounded cursor-pointer accent-accent-primary"
-              />
-              <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400">
-                Remember me
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm text-gray-300 mb-2">
+                Confirm Password
               </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Re-enter your password"
+                  className={`input-field w-full pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -168,15 +237,15 @@ const SignInPage = () => {
               disabled={loading}
               className="btn-primary w-full mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
-          {/* Sign Up Link */}
+          {/* Sign In Link */}
           <p className="text-center text-gray-400 text-sm mt-6">
-            Don't have an account?{' '}
-            <Link to="/signup" className="text-accent-primary hover:text-accent-secondary transition-colors font-medium">
-              Create one
+            Already have an account?{' '}
+            <Link to="/signin" className="text-accent-primary hover:text-accent-secondary transition-colors font-medium">
+              Sign In
             </Link>
           </p>
         </div>
@@ -185,4 +254,4 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default SignUpPage;

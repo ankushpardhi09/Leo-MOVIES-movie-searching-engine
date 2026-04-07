@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 // Import routes
 const movieRoutes = require('./routes/movies');
 const filterRoutes = require('./routes/filters');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -45,48 +46,59 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-connectDB();
+// Connect to database and start server
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    // API Routes
+    app.use('/api/movies', movieRoutes);
+    app.use('/api/filters', filterRoutes);
+    app.use('/api/auth', authRoutes);
 
-// API Routes
-app.use('/api/movies', movieRoutes);
-app.use('/api/filters', filterRoutes);
+    // Health check
+    app.get('/health', (req, res) => {
+      res.json({
+        status: 'Server is running ✅',
+        timestamp: new Date().toISOString(),
+        frontend_url: FRONTEND_URL,
+      });
+    });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'Server is running ✅',
-    timestamp: new Date().toISOString(),
-    frontend_url: FRONTEND_URL,
-  });
-});
+    // Root endpoint
+    app.get('/', (req, res) => {
+      res.json({
+        message: 'Movie Search Engine API',
+        version: '1.0.0',
+        endpoints: {
+          health: '/health',
+          search: '/api/movies/search?q=query',
+          movie_details: '/api/movies/:id',
+          genres: '/api/filters/genres',
+          years: '/api/filters/years',
+        },
+      });
+    });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Movie Search Engine API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      search: '/api/movies/search?q=query',
-      movie_details: '/api/movies/:id',
-      genres: '/api/filters/genres',
-      years: '/api/filters/years',
-    },
-  });
-});
+    // 404 handler
+    app.use((req, res) => {
+      res.status(404).json({ error: 'Route not found', path: req.path });
+    });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found', path: req.path });
-});
+    // Error handling middleware
+    app.use(errorHandler);
 
-// Error handling middleware
-app.use(errorHandler);
+    const PORT = BACKEND_PORT;
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on http://localhost:${PORT}`);
+      console.log(`✅ CORS configured for frontend at ${FRONTEND_URL}`);
+      console.log(`📍 API available at http://localhost:${PORT}/api`);
+    });
+  } catch (error) {
+    console.error(`❌ Failed to start server: ${error.message}`);
+    process.exit(1);
+  }
+};
 
-const PORT = BACKEND_PORT;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`✅ CORS configured for frontend at ${FRONTEND_URL}`);
-  console.log(`📍 API available at http://localhost:${PORT}/api`);
-});
+// Start the server
+startServer();
